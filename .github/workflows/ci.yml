@@ -1,0 +1,89 @@
+name: CI/CD Pipeline
+
+on:
+    push:
+        branches: [main, dev, homol]
+    pull_request:
+        branches: [main, dev, homol]
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checar o código
+        uses: actions/checkout@v3
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Rodar testes sem banco de dados
+        run: npm run test
+        if: env.DATABASE_URL == null
+
+      - name: Set database URL for tests
+        run: echo "DATABASE_URL=mysql://mariadb:password@localhost:3306/mariadb" >> $GITHUB_ENV
+      
+      - name: Rodar testes com banco de dados
+        run: npm run test-db
+        if: env.DATABASE_URL != null
+
+      - name: Rodar Prisma Migrate
+        run: npx prisma migrate deploy
+      
+      - name: Executar testes com cobertura
+        run: npm run coverage
+
+      - name: Salvar relatório de cobertura
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Executar testes
+        run: npm run test
+
+      - name: Executar lint
+        run: npm run lint
+
+      - name: Instalar Semgrep
+        run: pip install semgrep
+
+      - name: Executar análise com Semgrep
+        run: semgrep --config p/ci .
+
+      - name: Salvar relatórios
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: semgrep-report
+          path: semgrep.sarif
+
+  deploy-dev:
+      if: github.ref == 'refs/heads/dev'
+      needs: build-test-lint
+      runs-on: ubuntu-latest
+      steps:
+        - name: Deploy para Ambiente de Desenvolvimento
+          run: echo "Deploy para desenvolvimento"
+
+  deploy-homol:
+    if: github.ref == 'refs/heads/homol'
+    needs: build-test-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy para Ambiente de Homologação
+        run: echo "Deploy para homologação"
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    needs: build-test-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy para Produção
+        run: echo "Deploy para produção"
