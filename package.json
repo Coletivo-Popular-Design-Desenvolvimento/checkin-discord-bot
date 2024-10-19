@@ -10,11 +10,27 @@
   },
   "scripts": {
     "clean": "rimraf ./dist",
-    "start": "node dist/server.js",
+    "start": "npx prisma migrate deploy && npx prisma db push && node dist/server.js",
     "dev": "env-cmd -f .env nodemon",
     "build": "npm run clean && tsc",
     "test": "env-cmd -f .env jest --config=jest.json",
-    "lint": "eslint -c .eslintrc.js --ext .ts 'src/**/*.ts'"
+    "test-db": "env-cmd -f .env jest --config=jest.json",
+    "lint": "eslint -c .eslintrc.js --ext .ts 'src/**/*.ts'",
+    "coverage": "nyc npm run test"
+  },
+  "nyc": {
+    "reporter": [
+      "text",
+      "html",
+      "lcov"
+    ],
+    "include": [
+      "src/**/*.ts"
+    ],
+    "exclude": [
+      "node_modules",
+      "tests"
+    ]
   },
   "dependencies": {
     "@fastify/helmet": "^11.1.1",
@@ -25,10 +41,12 @@
     "@nestjs/swagger": "^7.1.17",
     "@nestjs/terminus": "^10.2.0",
     "@nestjs/testing": "^10.3.0",
-    "@prisma/client": "^5.8.0",
+    "@prisma/client": "^5.20.0",
+    "dotenv-expand": "^11.0.6",
     "fastify": "^4.25.2",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.3",
     "reflect-metadata": "^0.1.12",
     "rxjs": "^7.8.1",
     "winston": "^3.11.0"
@@ -40,6 +58,7 @@
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^6.18.1",
     "@typescript-eslint/parser": "^6.18.1",
+    "dotenv-cli": "^7.4.2",
     "env-cmd": "^10.1.0",
     "eslint": "^8.56.0",
     "eslint-plugin-import": "^2.29.1",
@@ -47,7 +66,7 @@
     "husky": "^8.0.3",
     "jest": "^29.7.0",
     "nodemon": "^3.0.2",
-    "prisma": "^5.8.0",
+    "prisma": "^5.20.0",
     "rimraf": "^5.0.5",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.1",
