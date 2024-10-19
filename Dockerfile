@@ -16,6 +16,9 @@ FROM node:20-alpine as builder
 
 ENV NODE_ENV build
 
+USER root
+RUN apk add --no-cache mysql-client
+
 USER node
 WORKDIR /home/node
 
@@ -23,6 +26,9 @@ COPY package*.json ./
 RUN npm ci
 
 COPY --chown=node:node . .
+COPY --chown=node:node ./.env ./.env
+COPY --chown=node:node prisma ./prisma/
+RUN ls -la & sleep 5
 RUN npx prisma generate \
     && npm run build \
     && npm prune --omit=dev
@@ -33,11 +39,17 @@ FROM node:20-alpine
 
 ENV NODE_ENV production
 
+USER root
+RUN apk add --no-cache mysql-client
+
 USER node
 WORKDIR /home/node
 
 COPY --from=builder --chown=node:node /home/node/package*.json ./
 COPY --from=builder --chown=node:node /home/node/node_modules/ ./node_modules/
 COPY --from=builder --chown=node:node /home/node/dist/ ./dist/
+COPY --chown=node:node prisma ./prisma/
 
-CMD ["node", "dist/server.js"]
+EXPOSE 3000
+
+CMD ["npm", "run", "start"]
