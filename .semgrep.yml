@@ -1,0 +1,28 @@
+rules:
+  - id: detect-eval
+    patterns:
+      - pattern: eval(...)
+    message: "Uso do eval detectado! Evite o uso de eval por razões de segurança."
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: no-console-log
+    patterns:
+      - pattern: console.log(...)
+    message: "Uso de console.log detectado. Utilize logger ou remova antes de enviar o código."
+    languages: [javascript, typescript]
+    severity: WARNING
+
+  - id: no-hardcoded-secrets
+    patterns:
+      - pattern: $SECRET = "<SECRET>"
+    message: "Segredo hardcoded detectado. Não inclua segredos diretamente no código."
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: detect-unsafe-regex
+    patterns:
+      - pattern: RegExp("...")
+    message: "Expressão regular insegura detectada. Verifique a segurança de expressões regulares para evitar ReDoS."
+    languages: [javascript, typescript]
+    severity: WARNING
